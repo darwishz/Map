@@ -74,7 +74,22 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_marker_violent_crime" /> <!-- Replace with your icon -->
+                android:src="@drawable/green_icon" /> <!-- Replace with your icon -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="User Location"
+                android:paddingLeft="4dp"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/red" /> <!-- Replace with your icon -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -89,7 +104,7 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_marker_property_crime" /> <!-- Replace with your icon -->
+                android:src="@drawable/blue" /> <!-- Replace with your icon -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
