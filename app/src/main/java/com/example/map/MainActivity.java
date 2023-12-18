@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -38,6 +39,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
@@ -51,12 +53,24 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.gms.common.api.Status;
 //import com.google.android.libraries.places.widget.model.AutocompletePrediction;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback , GoogleMap.OnPoiClickListener {
 
@@ -72,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LinearLayout legendLayout;  // Add this line
     private ImageButton legendButton;   // Add this line
     private List<Crime> crimeData = new ArrayList<>();
+    private double currentLat = 0;
+    private double currentLng = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +111,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Initialize the legend button
         initLegendButton();  // Make sure to add this line
 
+        ImageButton specificButton = findViewById(R.id.btnPolice); // Replace with your button's ID
+        specificButton.setOnClickListener(v -> onSpecificButtonClicked());
+
+        ImageButton specificButton2 = findViewById(R.id.btnHospital); // Replace with your button's ID
+        specificButton2.setOnClickListener(v -> onSpecificButtonClicked2());
+
+        ImageButton specificButton3 = findViewById(R.id.btnFireDepartment); // Replace with your button's ID
+        specificButton3.setOnClickListener(v -> onSpecificButtonClicked3());
     }
     private void initLegend() {
         // Reference to the legend layout
@@ -186,25 +210,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void getDeviceLocation() {
         Log.d(TAG, "getDeviceLocation: getting the device's current location");
-
         mfusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         try {
             if (mLocationPermissionsGranted) {
                 Task<Location> location = mfusedLocationProviderClient.getLastLocation();
                 location.addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
+                    if (task.isSuccessful() && task.getResult() != null) {
                         Log.d(TAG, "onComplete: found location");
                         Location currentLocation = task.getResult();
 
-                        if (currentLocation != null) {
-                            moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM, "My Location");
-                        } else {
-                            Log.d(TAG, "onComplete: current location is null");
-                            Toast.makeText(MainActivity.this, "Unable to get current location", Toast.LENGTH_SHORT).show();
-                        }
+                        // Store the current location in global variables
+                        currentLat = currentLocation.getLatitude();
+                        currentLng = currentLocation.getLongitude();
+
+                        moveCamera(new LatLng(currentLat, currentLng), DEFAULT_ZOOM, "My Location");
                     } else {
-                        Log.e(TAG, "onComplete: current location task unsuccessful", task.getException());
+                        Log.d(TAG, "onComplete: current location is null");
                         Toast.makeText(MainActivity.this, "Unable to get current location", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -394,5 +416,100 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (Exception e) {
             Log.e(TAG, "Error handling POI click: " + e.getMessage());
         }
+    }
+    private void parseResult(String data) {
+        try {
+            JSONObject object = new JSONObject(data);
+
+            // Check if the response contains results
+            if (object.has("results")) {
+                JsonParser jsonParser = new JsonParser();
+                List<HashMap<String, String>> mapList = jsonParser.parseResult(object);
+
+                if (mapList != null && !mapList.isEmpty()) {
+                    runOnUiThread(() -> {
+                        mMap.clear();
+                        for (int i = 0; i < mapList.size(); i++) {
+                            HashMap<String, String> hashMapList = mapList.get(i);
+                            double lat = Double.parseDouble(Objects.requireNonNull(hashMapList.get("lat")));
+                            double lng = Double.parseDouble(Objects.requireNonNull(hashMapList.get("lng")));
+                            String name = hashMapList.get("name");
+                            LatLng latLng = new LatLng(lat, lng);
+                            if (i == 0) {
+                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
+                            }
+                            mMap.addMarker(new MarkerOptions().position(latLng).title(name));
+                        }
+                    });
+                } else {
+                    Log.d(TAG, "No places found within the specified radius.");
+                }
+            } else if (object.has("status") && object.getString("status").equals("ZERO_RESULTS")) {
+                Log.d(TAG, "No places found within the specified radius.");
+            } else {
+                Log.e(TAG, "Error in API response: " + object.toString());
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
+        }
+    }
+    private void getNearbyPlace(String command) {
+        String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json" +
+                "?location=" + currentLat + "," + currentLng +
+                "&radius=5000" + // specify the radius in meters
+                "&keyword=" + command +
+                "&sensor=true" +
+                "&key=" + getResources().getString(R.string.api_key);
+        Log.d(TAG, "Url : " + url);
+        Executor executor = Executors.newSingleThreadExecutor();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    return downloadUrl(url);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }, executor).thenAccept(this::parseResult);
+        }
+    }
+    private String downloadUrl(String urlString) throws IOException {
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.connect();
+
+            try (InputStream stream = connection.getInputStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+
+                StringBuilder builder = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    builder.append(line);
+                }
+
+                return builder.toString();
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Error downloading URL: " + e.getMessage());
+            throw e; // Re-throw the exception for the calling method to handle
+        }
+    }
+    // Method to be called when the specific button is clicked
+    private void onSpecificButtonClicked() {
+        getDeviceLocation();
+        // Replace with desired place type: "police", "hospital", or "fire_station"
+        getNearbyPlace("police");
+    }
+    private void onSpecificButtonClicked2() {
+        getDeviceLocation();
+        // Replace with desired place type: "police", "hospital", or "fire_station"
+        getNearbyPlace("hospital");
+    }
+    private void onSpecificButtonClicked3() {
+        getDeviceLocation();
+        // Replace with desired place type: "police", "hospital", or "fire_station"
+        getNearbyPlace("fire%20station");
     }
 }

@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Map</string>
 
-    <string name="my_map_api_key">AIzaSyBBuX8J5JTjAMb11N1OEQizDix42NYf1VU</string>
+    <string name="api_key">AIzaSyBBuX8J5JTjAMb11N1OEQizDix42NYf1VU</string>
 </resources>

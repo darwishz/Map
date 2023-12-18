@@ -33,6 +33,36 @@
         android:layout_marginEnd="353dp"
         android:src="@android:drawable/ic_info" />
 
+    <!-- Button Under Legend -->
+
+    <ImageButton
+        android:id="@+id/btnPolice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/legendButton"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="21dp"
+        android:layout_marginEnd="353dp"
+        android:src="@drawable/ic_police" />
+    <ImageButton
+        android:id="@+id/btnHospital"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnPolice"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="21dp"
+        android:layout_marginEnd="353dp"
+        android:src="@drawable/ic_hospital" />
+    <ImageButton
+        android:id="@+id/btnFireDepartment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnHospital"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="21dp"
+        android:layout_marginEnd="353dp"
+        android:src="@drawable/ic_fire_department" />
+
     <FrameLayout
         android:id="@+id/autocomplete_fragment_container"
         android:layout_width="match_parent"
