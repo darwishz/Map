@@ -33,7 +33,7 @@
             android:value="@string/api_key" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".MapFragment"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

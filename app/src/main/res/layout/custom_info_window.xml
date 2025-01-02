@@ -7,10 +7,31 @@
     android:background="#FFFFFF">
 
     <TextView
+        android:id="@+id/timeStamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"/>
+    <TextView
         android:id="@+id/infoTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textStyle="bold"/>
-
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/Loclat"
+        android:textStyle="bold"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/LocLong"
+        android:textStyle="bold"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/go"
+        android:textStyle="bold"
+        android:layout_marginTop="10dp"
+        android:text="CLICK TO GO LOCATION"/>
     <!-- Add more views here if needed -->
 </LinearLayout>
